@@ -1,0 +1,5 @@
+bucket       = "production-eks-platform-tfstate-123456789012"
+key          = "environments/dev/terraform.tfstate"
+region       = "eu-west-2"
+encrypt      = true
+use_lockfile = true
