@@ -45,3 +45,15 @@ variable "enable_nat_gateway" {
   type        = bool
   default     = false
 }
+
+variable "ecr_untagged_retention_days" {
+  description = "Number of days to retain untagged application images."
+  type        = number
+  default     = 7
+}
+
+variable "ecr_tagged_image_count" {
+  description = "Maximum number of application release images to retain."
+  type        = number
+  default     = 20
+}

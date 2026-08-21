@@ -1,8 +1,10 @@
-aws_region         = "eu-west-2"
-project_name       = "production-eks-platform"
-environment        = "dev"
-vpc_cidr           = "10.20.0.0/16"
-enable_nat_gateway = false
+aws_region                  = "eu-west-2"
+project_name                = "production-eks-platform"
+environment                 = "dev"
+vpc_cidr                    = "10.20.0.0/16"
+enable_nat_gateway          = false
+ecr_untagged_retention_days = 7
+ecr_tagged_image_count      = 20
 
 public_subnets = {
   "eu-west-2a" = "10.20.0.0/24"
