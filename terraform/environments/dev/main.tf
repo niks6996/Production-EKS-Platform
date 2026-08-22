@@ -27,3 +27,15 @@ module "ecr" {
   tagged_image_count            = var.ecr_tagged_image_count
   tags                          = local.common_tags
 }
+
+module "eks" {
+  source = "../../modules/eks"
+
+  cluster_name           = "${local.name_prefix}-cluster"
+  kubernetes_version     = var.kubernetes_version
+  private_subnet_ids     = module.vpc.private_subnet_ids
+  endpoint_public_access = var.eks_endpoint_public_access
+  public_access_cidrs    = var.eks_public_access_cidrs
+  access_entries         = var.eks_access_entries
+  tags                   = local.common_tags
+}

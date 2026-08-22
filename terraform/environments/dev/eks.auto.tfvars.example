@@ -1,0 +1,12 @@
+kubernetes_version         = "1.33"
+eks_endpoint_public_access = true
+eks_public_access_cidrs    = ["203.0.113.10/32"]
+
+eks_access_entries = {
+  platform_admin = {
+    principal_arn     = "arn:aws:iam::123456789012:role/PlatformAdministrator"
+    policy_arn        = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+    access_scope_type = "cluster"
+    namespaces        = []
+  }
+}
