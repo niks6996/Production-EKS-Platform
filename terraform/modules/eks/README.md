@@ -13,4 +13,12 @@ This module provisions the managed Kubernetes control plane and its supporting i
 - CloudWatch log retention configured explicitly
 - Core EKS add-ons managed through Terraform
 
-Managed worker nodes are intentionally implemented separately so control-plane and compute responsibilities remain clear.
+## Managed worker nodes
+
+- Dedicated EC2 IAM role with EKS, ECR, networking and Session Manager permissions
+- Managed node group in private subnets
+- Encrypted GP3 root volumes
+- IMDSv2 tokens required
+- No SSH key or public remote-access configuration
+- Controlled scaling from one to two development nodes
+- Rolling updates limited to one unavailable node

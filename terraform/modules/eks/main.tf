@@ -105,3 +105,115 @@ resource "aws_eks_addon" "this" {
 
   tags = var.tags
 }
+
+data "aws_iam_policy_document" "node_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "node" {
+  name               = "${var.cluster_name}-node-role"
+  assume_role_policy = data.aws_iam_policy_document.node_assume_role.json
+
+  tags = var.tags
+}
+
+locals {
+  node_iam_policy_arns = toset([
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  ])
+}
+
+resource "aws_iam_role_policy_attachment" "node" {
+  for_each = local.node_iam_policy_arns
+
+  policy_arn = each.value
+  role       = aws_iam_role.node.name
+}
+
+resource "aws_launch_template" "node" {
+  name_prefix            = "${var.cluster_name}-node-"
+  description            = "Secure launch template for the EKS managed node group"
+  update_default_version = true
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      delete_on_termination = true
+      encrypted             = true
+      volume_size           = var.node_disk_size
+      volume_type           = "gp3"
+    }
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_put_response_hop_limit = 2
+    http_tokens                 = "required"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(var.tags, {
+      Name = "${var.cluster_name}-node"
+    })
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = merge(var.tags, {
+      Name = "${var.cluster_name}-node-volume"
+    })
+  }
+
+  tags = var.tags
+}
+
+resource "aws_eks_node_group" "this" {
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "${var.cluster_name}-managed-nodes"
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = var.private_subnet_ids
+  capacity_type   = var.node_capacity_type
+  instance_types  = var.node_instance_types
+
+  launch_template {
+    id      = aws_launch_template.node.id
+    version = aws_launch_template.node.latest_version
+  }
+
+  scaling_config {
+    desired_size = var.node_desired_size
+    max_size     = var.node_max_size
+    min_size     = var.node_min_size
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  labels = {
+    environment = var.environment
+    capacity    = lower(replace(var.node_capacity_type, "_", "-"))
+  }
+
+  tags = var.tags
+
+  depends_on = [aws_iam_role_policy_attachment.node]
+
+  lifecycle {
+    ignore_changes = [scaling_config[0].desired_size]
+  }
+}

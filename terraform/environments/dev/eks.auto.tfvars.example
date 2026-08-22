@@ -1,6 +1,12 @@
 kubernetes_version         = "1.33"
 eks_endpoint_public_access = true
 eks_public_access_cidrs    = ["203.0.113.10/32"]
+eks_node_instance_types    = ["t3.medium"]
+eks_node_capacity_type     = "ON_DEMAND"
+eks_node_disk_size         = 30
+eks_node_desired_size      = 1
+eks_node_min_size          = 1
+eks_node_max_size          = 2
 
 eks_access_entries = {
   platform_admin = {

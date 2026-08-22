@@ -33,3 +33,18 @@ output "oidc_issuer_url" {
   description = "OpenID Connect issuer URL exposed by the EKS cluster."
   value       = aws_eks_cluster.this.identity[0].oidc[0].issuer
 }
+
+output "node_group_arn" {
+  description = "ARN of the EKS managed node group."
+  value       = aws_eks_node_group.this.arn
+}
+
+output "node_group_name" {
+  description = "Name of the EKS managed node group."
+  value       = aws_eks_node_group.this.node_group_name
+}
+
+output "node_iam_role_arn" {
+  description = "ARN of the IAM role used by managed worker nodes."
+  value       = aws_iam_role.node.arn
+}

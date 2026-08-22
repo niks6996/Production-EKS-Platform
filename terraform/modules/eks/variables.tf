@@ -76,6 +76,52 @@ variable "access_entries" {
   }
 }
 
+variable "environment" {
+  description = "Environment label applied to managed worker nodes."
+  type        = string
+}
+
+variable "node_instance_types" {
+  description = "EC2 instance types available to the managed node group."
+  type        = list(string)
+  default     = ["t3.medium"]
+}
+
+variable "node_capacity_type" {
+  description = "Capacity type used by the managed node group."
+  type        = string
+  default     = "ON_DEMAND"
+
+  validation {
+    condition     = contains(["ON_DEMAND", "SPOT"], var.node_capacity_type)
+    error_message = "The node capacity type must be ON_DEMAND or SPOT."
+  }
+}
+
+variable "node_disk_size" {
+  description = "Encrypted GP3 root-volume size in GiB."
+  type        = number
+  default     = 30
+}
+
+variable "node_desired_size" {
+  description = "Initial desired number of worker nodes."
+  type        = number
+  default     = 1
+}
+
+variable "node_min_size" {
+  description = "Minimum number of worker nodes."
+  type        = number
+  default     = 1
+}
+
+variable "node_max_size" {
+  description = "Maximum number of worker nodes."
+  type        = number
+  default     = 2
+}
+
 variable "tags" {
   description = "Tags applied to supported EKS resources."
   type        = map(string)

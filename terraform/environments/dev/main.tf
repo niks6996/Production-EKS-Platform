@@ -37,5 +37,12 @@ module "eks" {
   endpoint_public_access = var.eks_endpoint_public_access
   public_access_cidrs    = var.eks_public_access_cidrs
   access_entries         = var.eks_access_entries
+  environment            = var.environment
+  node_instance_types    = var.eks_node_instance_types
+  node_capacity_type     = var.eks_node_capacity_type
+  node_disk_size         = var.eks_node_disk_size
+  node_desired_size      = var.eks_node_desired_size
+  node_min_size          = var.eks_node_min_size
+  node_max_size          = var.eks_node_max_size
   tags                   = local.common_tags
 }
