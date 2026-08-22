@@ -1,0 +1,8 @@
+1. Check the deployment:
+   kubectl get deployment {{ include "platform-api.fullname" . }} -n {{ .Release.Namespace }}
+
+2. Forward the service locally:
+   kubectl port-forward service/{{ include "platform-api.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+
+3. Test the health endpoint:
+   curl http://127.0.0.1:8080/health
