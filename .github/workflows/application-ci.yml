@@ -1,0 +1,69 @@
+name: Application CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/platform-api/**"
+      - ".github/workflows/application-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/platform-api/**"
+      - ".github/workflows/application-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: application-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: apps/platform-api
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Compile Python source
+        run: python -m compileall -q app.py test_app.py
+
+      - name: Run unit tests
+        run: python -m unittest -v
+
+  container:
+    name: Container build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/platform-api
+          file: apps/platform-api/Dockerfile
+          push: false
+          tags: production-eks-platform/platform-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
