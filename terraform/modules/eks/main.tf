@@ -86,12 +86,20 @@ resource "aws_eks_access_policy_association" "this" {
   }
 }
 
+data "aws_eks_addon_version" "this" {
+  for_each = toset(var.cluster_addons)
+
+  addon_name         = each.value
+  kubernetes_version = aws_eks_cluster.this.version
+  most_recent        = true
+}
+
 resource "aws_eks_addon" "this" {
   for_each = toset(var.cluster_addons)
 
   cluster_name                = aws_eks_cluster.this.name
   addon_name                  = each.value
-  most_recent                 = true
+  addon_version               = data.aws_eks_addon_version.this[each.key].version
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
