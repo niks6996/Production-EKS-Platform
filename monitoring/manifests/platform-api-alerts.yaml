@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-api-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: production-eks-platform
+spec:
+  groups:
+    - name: platform-api.availability
+      rules:
+        - alert: PlatformApiUnavailable
+          expr: absent(up{namespace="platform", service=~".*platform-api.*"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Platform API is unavailable
+            description: Prometheus has not observed a healthy platform API target for five minutes.
+
+        - alert: PlatformApiPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="platform", container="platform-api"}[15m]) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Platform API pods are restarting
+            description: A platform API container restarted more than twice during the last 15 minutes.
+
+        - alert: PlatformApiHighCPU
+          expr: sum(rate(container_cpu_usage_seconds_total{namespace="platform", container="platform-api"}[5m])) / sum(kube_pod_container_resource_limits{namespace="platform", container="platform-api", resource="cpu"}) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Platform API CPU utilisation is high
+            description: Platform API CPU usage has exceeded 80 percent of its configured limit for 10 minutes.

@@ -9,11 +9,24 @@ spec:
   description: GitOps project for the Production EKS Platform workloads
   sourceRepos:
     - https://github.com/niks6996/Production-EKS-Platform.git
+    - https://prometheus-community.github.io/helm-charts
   destinations:
     - namespace: platform
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
   orphanedResources:
     warn: true

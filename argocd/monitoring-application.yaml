@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-monitoring
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: production-eks-platform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: production-eks-platform
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 75.15.1
+      helm:
+        releaseName: monitoring
+        valueFiles:
+          - $values/monitoring/kube-prometheus-stack-values.yaml
+    - repoURL: https://github.com/niks6996/Production-EKS-Platform.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/niks6996/Production-EKS-Platform.git
+      targetRevision: main
+      path: monitoring/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - ServerSideApply=true

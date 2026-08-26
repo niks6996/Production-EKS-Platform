@@ -1,0 +1,76 @@
+name: Monitoring validation
+
+on:
+  pull_request:
+    paths:
+      - "monitoring/**"
+      - "argocd/monitoring-application.yaml"
+      - "argocd/project.yaml"
+      - ".github/workflows/monitoring-validate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "monitoring/**"
+      - "argocd/monitoring-application.yaml"
+      - "argocd/project.yaml"
+      - ".github/workflows/monitoring-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate monitoring configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
+
+      - name: Validate YAML and dashboard JSON
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          import yaml
+
+          yaml_paths = [
+              Path("monitoring/kube-prometheus-stack-values.yaml"),
+              Path("monitoring/manifests/platform-api-alerts.yaml"),
+              Path("monitoring/manifests/platform-api-dashboard.yaml"),
+              Path("argocd/monitoring-application.yaml"),
+              Path("argocd/project.yaml"),
+          ]
+
+          for path in yaml_paths:
+              yaml.safe_load(path.read_text(encoding="utf-8"))
+              print(f"Valid YAML: {path}")
+
+          dashboard_manifest = yaml.safe_load(
+              Path("monitoring/manifests/platform-api-dashboard.yaml").read_text(
+                  encoding="utf-8"
+              )
+          )
+          dashboard = dashboard_manifest["data"]["platform-api.json"]
+          json.loads(dashboard)
+          print("Valid dashboard JSON")
+
+      - name: Check required monitoring resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "kind: PrometheusRule" monitoring/manifests/platform-api-alerts.yaml
+          grep -q "grafana_dashboard" monitoring/manifests/platform-api-dashboard.yaml
+          grep -q "kube-prometheus-stack" argocd/monitoring-application.yaml
