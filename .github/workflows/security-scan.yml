@@ -1,0 +1,123 @@
+name: Security scanning
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "argocd/**"
+      - "helm/**"
+      - "monitoring/**"
+      - "policies/**"
+      - "terraform/**"
+      - ".github/workflows/security-scan.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "argocd/**"
+      - "helm/**"
+      - "monitoring/**"
+      - "policies/**"
+      - "terraform/**"
+      - ".github/workflows/security-scan.yml"
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: security-scanning-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository:
+    name: Repository security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan configuration and source files
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-repository.sarif
+          exit-code: "0"
+
+      - name: Upload repository findings
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-repository.sarif
+          category: trivy-repository
+
+  secret-gate:
+    name: Secret detection gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan for committed secrets
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: "1"
+
+  container:
+    name: Container vulnerability gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build scan image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/platform-api
+          file: apps/platform-api/Dockerfile
+          load: true
+          push: false
+          tags: production-eks-platform/platform-api:security-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          image-ref: production-eks-platform/platform-api:security-scan
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-container.sarif
+          exit-code: "1"
+
+      - name: Upload container findings
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-container.sarif
+          category: trivy-container
