@@ -104,16 +104,27 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Scan container image
+      - name: Scan container image and enforce critical gate
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: production-eks-platform/platform-api:security-scan
           scanners: vuln
           severity: CRITICAL
           ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+      - name: Generate container SARIF report
+        uses: aquasecurity/trivy-action@master
+        if: always()
+        with:
+          image-ref: production-eks-platform/platform-api:security-scan
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
           format: sarif
           output: trivy-container.sarif
-          exit-code: "1"
+          exit-code: "0"
 
       - name: Upload container findings
         uses: github/codeql-action/upload-sarif@v3
