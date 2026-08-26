@@ -1,0 +1,72 @@
+name: Policy validation
+
+on:
+  pull_request:
+    paths:
+      - "policies/**"
+      - "argocd/kyverno-application.yaml"
+      - "argocd/security-policies-application.yaml"
+      - "argocd/project.yaml"
+      - ".github/workflows/policy-validate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "policies/**"
+      - "argocd/kyverno-application.yaml"
+      - "argocd/security-policies-application.yaml"
+      - "argocd/project.yaml"
+      - ".github/workflows/policy-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate security policies
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
+
+      - name: Validate policy structure
+        shell: python
+        run: |
+          from pathlib import Path
+
+          import yaml
+
+          policy_paths = sorted(Path("policies/kyverno").glob("*.yaml"))
+          if not policy_paths:
+              raise SystemExit("No Kyverno policies found")
+
+          required_rules = {
+              "require-non-root-pods",
+              "require-restricted-containers",
+              "require-resource-controls",
+              "require-image-tag",
+              "disallow-latest-image-tag",
+          }
+
+          for path in policy_paths:
+              policy = yaml.safe_load(path.read_text(encoding="utf-8"))
+              assert policy["apiVersion"] == "kyverno.io/v1"
+              assert policy["kind"] == "ClusterPolicy"
+              assert policy["spec"]["validationFailureAction"] == "Enforce"
+              rule_names = {rule["name"] for rule in policy["spec"]["rules"]}
+              assert required_rules.issubset(rule_names)
+              print(f"Valid enforced policy: {path}")
+
+      - name: Validate Argo CD resources
+        run: python scripts/validate_yaml.py

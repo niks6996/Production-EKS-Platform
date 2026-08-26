@@ -1,0 +1,102 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: platform-workload-security
+  labels:
+    app.kubernetes.io/part-of: production-eks-platform
+spec:
+  admission: true
+  background: true
+  validationFailureAction: Enforce
+  rules:
+    - name: require-non-root-pods
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - platform
+      validate:
+        allowExistingViolations: false
+        message: Pods in the platform namespace must run as non-root.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+
+    - name: require-restricted-containers
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - platform
+      validate:
+        allowExistingViolations: false
+        message: Containers must disable privilege escalation, use a read-only root filesystem and drop all capabilities.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  privileged: false
+                  readOnlyRootFilesystem: true
+                  capabilities:
+                    drop:
+                      - ALL
+
+    - name: require-resource-controls
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - platform
+      validate:
+        allowExistingViolations: false
+        message: Containers must define CPU and memory requests and limits.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"
+
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - platform
+      validate:
+        allowExistingViolations: false
+        message: Container images must use an explicit tag.
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+
+    - name: disallow-latest-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - platform
+      validate:
+        allowExistingViolations: false
+        message: Container images must use an explicit immutable version and cannot use the latest tag.
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
