@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: production-eks-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: production-eks-platform
+spec:
+  description: GitOps project for the Production EKS Platform workloads
+  sourceRepos:
+    - https://github.com/niks6996/Production-EKS-Platform.git
+  destinations:
+    - namespace: platform
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  orphanedResources:
+    warn: true

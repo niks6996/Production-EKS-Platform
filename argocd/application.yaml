@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-api
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: production-eks-platform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: production-eks-platform
+  source:
+    repoURL: https://github.com/niks6996/Production-EKS-Platform.git
+    targetRevision: main
+    path: helm/platform-api
+    helm:
+      releaseName: platform-api
+      parameters:
+        - name: image.repository
+          value: 123456789012.dkr.ecr.eu-west-2.amazonaws.com/production-eks-platform-dev-app
+        - name: image.tag
+          value: "0.1.0"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: platform
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true

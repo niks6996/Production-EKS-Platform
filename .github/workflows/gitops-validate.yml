@@ -1,0 +1,59 @@
+name: GitOps validation
+
+on:
+  pull_request:
+    paths:
+      - "argocd/**"
+      - "scripts/validate_yaml.py"
+      - ".github/workflows/gitops-validate.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "argocd/**"
+      - "scripts/validate_yaml.py"
+      - ".github/workflows/gitops-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitops-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Argo CD configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
+
+      - name: Validate YAML documents
+        run: python scripts/validate_yaml.py
+
+      - name: Check GitOps relationships
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          project_name="$(python -c 'import yaml; print(yaml.safe_load(open("argocd/project.yaml"))["metadata"]["name"])')"
+          application_project="$(python -c 'import yaml; print(yaml.safe_load(open("argocd/application.yaml"))["spec"]["project"])')"
+          chart_path="$(python -c 'import yaml; print(yaml.safe_load(open("argocd/application.yaml"))["spec"]["source"]["path"])')"
+
+          test "${project_name}" = "${application_project}"
+          test -f "${chart_path}/Chart.yaml"
+
+          echo "Application references AppProject: ${project_name}"
+          echo "Application references Helm chart: ${chart_path}"
