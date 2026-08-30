@@ -60,6 +60,15 @@ jobs:
             --set serviceMonitor.enabled=true \
             > /tmp/platform-api-complete.yaml
 
+      - name: Render development ALB ingress
+        run: |
+          helm template platform-api helm/platform-api \
+            --namespace platform \
+            --values helm/platform-api/values-dev.yaml \
+            --set image.repository=local/platform-api \
+            --set image.tag=ci \
+            > /tmp/platform-api-development.yaml
+
       - name: Confirm rendered resources
         run: |
           grep -q "kind: Deployment" /tmp/platform-api-default.yaml
@@ -67,3 +76,5 @@ jobs:
           grep -q "kind: HorizontalPodAutoscaler" /tmp/platform-api-complete.yaml
           grep -q "kind: Ingress" /tmp/platform-api-complete.yaml
           grep -q "kind: ServiceMonitor" /tmp/platform-api-complete.yaml
+          grep -q "alb.ingress.kubernetes.io/scheme: internet-facing" /tmp/platform-api-development.yaml
+          grep -q "alb.ingress.kubernetes.io/target-type: ip" /tmp/platform-api-development.yaml
