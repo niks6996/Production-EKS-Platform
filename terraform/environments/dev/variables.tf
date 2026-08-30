@@ -57,3 +57,24 @@ variable "ecr_tagged_image_count" {
   type        = number
   default     = 20
 }
+
+variable "monthly_budget_limit_usd" {
+  description = "Monthly AWS account budget limit in US dollars."
+  type        = number
+  default     = 75
+
+  validation {
+    condition     = var.monthly_budget_limit_usd >= 10
+    error_message = "The monthly budget limit must be at least USD 10."
+  }
+}
+
+variable "budget_alert_email" {
+  description = "Email address receiving AWS budget alerts. Supply a real address only for live deployment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", var.budget_alert_email))
+    error_message = "budget_alert_email must be a valid email address."
+  }
+}

@@ -74,3 +74,11 @@ module "cluster_autoscaler_identity" {
   service_account = "cluster-autoscaler-aws-cluster-autoscaler"
   tags            = local.common_tags
 }
+
+module "cost_controls" {
+  source = "../../modules/cost-controls"
+
+  budget_name       = "${local.name_prefix}-monthly-budget"
+  monthly_limit_usd = var.monthly_budget_limit_usd
+  alert_email       = var.budget_alert_email
+}
