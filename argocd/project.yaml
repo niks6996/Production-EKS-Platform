@@ -11,12 +11,15 @@ spec:
     - https://github.com/niks6996/Production-EKS-Platform.git
     - https://kyverno.github.io/kyverno
     - https://prometheus-community.github.io/helm-charts
+    - https://aws.github.io/eks-charts
   destinations:
     - namespace: platform
       server: https://kubernetes.default.svc
     - namespace: monitoring
       server: https://kubernetes.default.svc
     - namespace: kyverno
+      server: https://kubernetes.default.svc
+    - namespace: kube-system
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ""

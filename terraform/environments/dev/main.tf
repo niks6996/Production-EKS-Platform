@@ -46,3 +46,13 @@ module "eks" {
   node_max_size          = var.eks_node_max_size
   tags                   = local.common_tags
 }
+
+module "aws_load_balancer_controller" {
+  source = "../../modules/aws-load-balancer-controller"
+
+  cluster_name    = module.eks.cluster_name
+  policy_name     = "${local.name_prefix}-aws-load-balancer-controller"
+  role_name       = "${local.name_prefix}-aws-load-balancer-controller"
+  service_account = "aws-load-balancer-controller"
+  tags            = local.common_tags
+}
