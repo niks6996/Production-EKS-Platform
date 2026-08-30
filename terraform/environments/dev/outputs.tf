@@ -27,3 +27,8 @@ output "ecr_repository_url" {
   description = "URL of the application ECR repository."
   value       = module.ecr.repository_url
 }
+
+output "github_ecr_publish_role_arn" {
+  description = "IAM role ARN to store as the AWS_PUBLISH_ROLE_ARN GitHub repository variable."
+  value       = module.github_ecr_publisher.role_arn
+}

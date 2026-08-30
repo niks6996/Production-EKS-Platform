@@ -56,3 +56,12 @@ module "aws_load_balancer_controller" {
   service_account = "aws-load-balancer-controller"
   tags            = local.common_tags
 }
+
+module "github_ecr_publisher" {
+  source = "../../modules/github-ecr-publisher"
+
+  github_repository  = "niks6996/Production-EKS-Platform"
+  ecr_repository_arn = module.ecr.repository_arn
+  role_name          = "${local.name_prefix}-github-ecr-publisher"
+  tags               = local.common_tags
+}
