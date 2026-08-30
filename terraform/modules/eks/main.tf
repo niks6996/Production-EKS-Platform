@@ -209,7 +209,10 @@ resource "aws_eks_node_group" "this" {
     capacity    = lower(replace(var.node_capacity_type, "_", "-"))
   }
 
-  tags = var.tags
+  tags = merge(var.tags, {
+    "k8s.io/cluster-autoscaler/enabled"             = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+  })
 
   depends_on = [aws_iam_role_policy_attachment.node]
 

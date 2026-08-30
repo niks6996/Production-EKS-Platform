@@ -65,3 +65,12 @@ module "github_ecr_publisher" {
   role_name          = "${local.name_prefix}-github-ecr-publisher"
   tags               = local.common_tags
 }
+
+module "cluster_autoscaler_identity" {
+  source = "../../modules/cluster-autoscaler-identity"
+
+  cluster_name    = module.eks.cluster_name
+  role_name       = "${local.name_prefix}-cluster-autoscaler"
+  service_account = "cluster-autoscaler-aws-cluster-autoscaler"
+  tags            = local.common_tags
+}
