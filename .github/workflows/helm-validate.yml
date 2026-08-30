@@ -78,3 +78,4 @@ jobs:
           grep -q "kind: ServiceMonitor" /tmp/platform-api-complete.yaml
           grep -q "alb.ingress.kubernetes.io/scheme: internet-facing" /tmp/platform-api-development.yaml
           grep -q "alb.ingress.kubernetes.io/target-type: ip" /tmp/platform-api-development.yaml
+          grep -q "kind: HorizontalPodAutoscaler" /tmp/platform-api-development.yaml
