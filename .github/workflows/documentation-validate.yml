@@ -1,0 +1,32 @@
+name: Documentation validation
+
+on:
+  pull_request:
+    paths: ["docs/**", ".github/workflows/documentation-validate.yml"]
+  push:
+    branches: [main]
+    paths: ["docs/**", ".github/workflows/documentation-validate.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate operational runbooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm required runbooks and sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(deployment-runbook rollback-runbook incident-response-runbook recovery-runbook cost-and-teardown-runbook)
+          for name in "${files[@]}"; do
+            test -s "docs/${name}.md"
+          done
+          grep -q '^## Preconditions' docs/deployment-runbook.md
+          grep -q '^## Application rollback' docs/rollback-runbook.md
+          grep -q '^## Triage' docs/incident-response-runbook.md
+          grep -q '^## Terraform state' docs/recovery-runbook.md
