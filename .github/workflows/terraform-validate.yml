@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - "terraform/**"
+      - "scripts/live_preflight.sh"
       - ".github/workflows/terraform-validate.yml"
   push:
     branches:
       - main
     paths:
       - "terraform/**"
+      - "scripts/live_preflight.sh"
       - ".github/workflows/terraform-validate.yml"
   workflow_dispatch:
 
@@ -38,6 +40,9 @@ jobs:
 
       - name: Display Terraform version
         run: terraform version
+
+      - name: Validate live preflight script syntax
+        run: bash -n scripts/live_preflight.sh
 
       - name: Check Terraform formatting
         run: terraform fmt -check -diff -recursive terraform

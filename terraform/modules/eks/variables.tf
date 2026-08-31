@@ -52,6 +52,7 @@ variable "cluster_addons" {
   type        = list(string)
   default = [
     "coredns",
+    "eks-pod-identity-agent",
     "kube-proxy",
     "vpc-cni"
   ]

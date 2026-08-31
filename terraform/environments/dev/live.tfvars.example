@@ -1,0 +1,38 @@
+aws_region                  = "eu-west-2"
+project_name                = "production-eks-platform"
+environment                 = "dev"
+vpc_cidr                    = "10.20.0.0/16"
+enable_nat_gateway          = true
+ecr_untagged_retention_days = 7
+ecr_tagged_image_count      = 20
+monthly_budget_limit_usd    = 75
+budget_alert_email          = "REPLACE_WITH_REAL_EMAIL"
+
+kubernetes_version         = "1.33"
+eks_endpoint_public_access = true
+eks_public_access_cidrs    = ["REPLACE_WITH_TRUSTED_PUBLIC_IP/32"]
+eks_node_instance_types    = ["t3.medium"]
+eks_node_capacity_type     = "ON_DEMAND"
+eks_node_disk_size         = 30
+eks_node_desired_size      = 1
+eks_node_min_size          = 1
+eks_node_max_size          = 2
+
+eks_access_entries = {
+  platform_admin = {
+    principal_arn     = "REPLACE_WITH_DEPLOYER_IAM_ARN"
+    policy_arn        = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+    access_scope_type = "cluster"
+    namespaces        = []
+  }
+}
+
+public_subnets = {
+  "eu-west-2a" = "10.20.0.0/24"
+  "eu-west-2b" = "10.20.1.0/24"
+}
+
+private_subnets = {
+  "eu-west-2a" = "10.20.10.0/24"
+  "eu-west-2b" = "10.20.11.0/24"
+}
