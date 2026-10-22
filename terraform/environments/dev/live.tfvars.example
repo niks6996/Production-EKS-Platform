@@ -8,7 +8,7 @@ ecr_tagged_image_count      = 20
 monthly_budget_limit_usd    = 75
 budget_alert_email          = "REPLACE_WITH_REAL_EMAIL"
 
-kubernetes_version         = "1.33"
+kubernetes_version         = "1.35"
 eks_endpoint_public_access = true
 eks_public_access_cidrs    = ["REPLACE_WITH_TRUSTED_PUBLIC_IP/32"]
 eks_node_instance_types    = ["t3.medium"]

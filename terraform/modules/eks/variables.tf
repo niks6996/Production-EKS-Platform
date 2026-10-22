@@ -11,7 +11,7 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   description = "Kubernetes minor version used by the EKS control plane."
   type        = string
-  default     = "1.33"
+  default     = "1.35"
 }
 
 variable "private_subnet_ids" {

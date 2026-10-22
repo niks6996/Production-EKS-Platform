@@ -1,42 +1,45 @@
 apiVersion: argoproj.io/v1alpha1
-kind: AppProject
+kind: Application
 metadata:
-  name: production-eks-platform
+  name: cluster-autoscaler
   namespace: argocd
-  labels:
-    app.kubernetes.io/part-of: production-eks-platform
 spec:
-  description: GitOps project for the Production EKS Platform workloads
-  sourceRepos:
-    - https://github.com/niks6996/Production-EKS-Platform.git
-    - https://kyverno.github.io/kyverno
-    - https://prometheus-community.github.io/helm-charts
-    - https://aws.github.io/eks-charts
-    - https://kubernetes-sigs.github.io/metrics-server/
-    - https://kubernetes.github.io/autoscaler
-  destinations:
-    - namespace: platform
-      server: https://kubernetes.default.svc
-    - namespace: monitoring
-      server: https://kubernetes.default.svc
-    - namespace: kyverno
-      server: https://kubernetes.default.svc
-    - namespace: kube-system
-      server: https://kubernetes.default.svc
-  clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-    - group: admissionregistration.k8s.io
-      kind: ValidatingWebhookConfiguration
-    - group: apiextensions.k8s.io
-      kind: CustomResourceDefinition
-    - group: kyverno.io
-      kind: ClusterPolicy
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRole
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRoleBinding
-  orphanedResources:
-    warn: true
+  project: production-eks-platform
+  source:
+    repoURL: https://kubernetes.github.io/autoscaler
+    chart: cluster-autoscaler
+    targetRevision: "9.59.0"
+    helm:
+      releaseName: cluster-autoscaler
+      values: |
+        cloudProvider: aws
+        awsRegion: eu-west-2
+
+        autoDiscovery:
+          clusterName: production-eks-platform-dev-cluster
+
+        image:
+          tag: v1.35.0
+
+        rbac:
+          serviceAccount:
+            create: true
+            name: cluster-autoscaler-aws-cluster-autoscaler
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+          limits:
+            cpu: 200m
+            memory: 600Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
