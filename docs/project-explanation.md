@@ -1,4 +1,5 @@
-# Project explanation
+ Project explanation 
+ 
 ## The problem
 
 Manual infrastructure and application setup can drift between environments. This project explores how to describe that setup in code, validate changes, package an application consistently and prepare security and operations controls before deployment.

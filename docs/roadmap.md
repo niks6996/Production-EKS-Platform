@@ -1,41 +1,22 @@
-# Build roadmap
+# Remaining work
 
-## Phase 1: Foundation
+## Completed portfolio milestone
 
-- Repository structure and architecture
-- Terraform formatting and validation workflow
-- Remote-state bootstrap with Amazon S3 and state locking
-- VPC module and development environment
+Repository configuration and validation cover infrastructure, application packaging, GitOps, monitoring, scanning, policies and operations. The manual application integration workflow passed on Kind. Screenshots were collected by the project owner. This is the current completion boundary.
 
-## Phase 2: Container platform
+## Before live AWS deployment
 
-- Amazon ECR repository
-- Amazon EKS control plane
-- Managed node group
-- IAM roles and EKS access configuration
-- EKS add-ons
+- Review the actual current AWS plan, service availability/pricing and account eligibility.
+- Recheck Kubernetes support status and controller/chart compatibility for the deployment date.
+- Review action references and replace mutable branches with reviewed commit pins.
+- Replace account, identity, trusted-network, notification and image placeholders appropriately.
+- Review OIDC trust, Pod Identity associations/agent, access entries, NAT routes and state protection.
+- Inspect the Terraform plan and agree a deployment window and teardown procedure.
 
-## Phase 3: Workload delivery
+## Live verification still pending
 
-- Sample application
-- Container build
-- Helm chart
-- AWS Load Balancer Controller
-- GitHub Actions CI/CD
-- Argo CD GitOps
+Provisioning; ECR authentication/push; EKS node readiness; Argo CD bootstrap/sync; controller identity; ALB targets; application traffic; monitoring/alerts; Kyverno admission tests; HPA/node scaling; rollback/recovery drills; final teardown and residual-resource inspection.
 
-## Phase 4: Operations
+## Portfolio maintenance
 
-- Prometheus and Grafana
-- Alerts and dashboards
-- Security scanning and policy enforcement
-- Cost visibility and rightsizing
-- Operational runbooks
-
-## Phase 5: Evidence
-
-- Live deployment
-- Validation evidence
-- Architecture diagram
-- Screenshots and troubleshooting record
-- Final README
+Add sanitised evidence and actual run URLs, keep claims aligned with results, practise the project explanation and update this status only after obtaining new evidence. A future production design would also need stronger availability, TLS, durable monitoring/logging, secrets lifecycle management and measured recovery objectives.
