@@ -1,0 +1,55 @@
+name: Kubernetes integration (no AWS)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kind-integration-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  integration:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.18.4
+      - name: Install Kind
+        run: |
+          curl -fsSL --retry 3 https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64 -o /tmp/kind
+          sudo install -m 0755 /tmp/kind /usr/local/bin/kind
+          kind version
+      - name: Application unit tests
+        run: python3 -m unittest discover -s apps/platform-api -v
+      - name: Build application image
+        run: docker build -t local/platform-api:${{ github.sha }} apps/platform-api
+      - name: Create temporary cluster
+        run: kind create cluster --name platform-ci --wait 180s
+      - name: Load application image
+        run: kind load docker-image local/platform-api:${{ github.sha }} --name platform-ci
+      - name: Deploy and test
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: bash scripts/kind_integration.sh
+      - name: Diagnostics
+        if: always()
+        run: |
+          kubectl get nodes -o wide || true
+          kubectl -n platform get deployments,pods,services,endpoints -o wide || true
+          kubectl -n platform get events --sort-by=.lastTimestamp || true
+          kubectl -n platform describe pods || true
+          kubectl -n platform logs -l app.kubernetes.io/instance=platform-api --all-containers --tail=100 --prefix || true
+      - name: Delete temporary cluster
+        if: always()
+        run: kind delete cluster --name platform-ci
+      - name: Record outcome
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          echo "## Kubernetes integration: $RESULT" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "UTC: $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Scope: application and Helm on Kind. AWS, GitOps, policy enforcement, monitoring stack and autoscaling were not tested.' >> "$GITHUB_STEP_SUMMARY"
