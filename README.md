@@ -1,75 +1,93 @@
-# Production EKS Platform
+# Production-Style AWS EKS Platform
 
-A production-style Amazon EKS platform built with Terraform, Kubernetes, Helm, GitHub Actions, Argo CD, Prometheus and Grafana.
+A portfolio platform combining modular Terraform, a containerised Python API, Helm, GitHub Actions, Argo CD, security controls and observability configuration.
 
-## Project goals
+**Status:** repository validation completed during development and application integration passed on a temporary Kind cluster in GitHub Actions. Live AWS EKS deployment is pending. This project has not served production customer traffic.
 
-- Provision reusable AWS infrastructure with Terraform modules.
-- Run workloads on Amazon EKS using managed node groups.
-- Deploy applications through Helm and Argo CD GitOps.
-- Expose applications through the AWS Load Balancer Controller.
-- Add automated validation, security scanning and policy checks.
-- Monitor the platform with Prometheus and Grafana.
-- demonstrate cost allocation, rightsizing and scaling practices.
+## What this project demonstrates
 
-## Planned architecture
+- Reusable infrastructure modules for VPC, ECR, EKS, workload identity and budget alerts.
+- A non-root application container with health, readiness and Prometheus metrics endpoints.
+- A Helm chart with resource requests/limits, probes and optional platform integrations.
+- CI checks for infrastructure, application, Helm, GitOps, monitoring, policies and runbooks.
+- A manual runtime test that builds the image, loads it into Kind, deploys two replicas, checks endpoints and removes the cluster.
+- Prepared GitOps configuration for monitoring, policy enforcement, ingress and scaling.
+- Operational deployment, rollback, recovery and teardown procedures.
 
-```mermaid
-flowchart TD
-    Dev[Developer] --> GH[GitHub repository]
-    GH --> CI[GitHub Actions]
-    CI --> ECR[Amazon ECR]
-    CI --> TF[Terraform]
-    TF --> VPC[AWS VPC]
-    TF --> EKS[Amazon EKS]
-    ECR --> EKS
-    GH --> Argo[Argo CD]
-    Argo --> EKS
-    ALB[AWS ALB] --> EKS
-    EKS --> Obs[Prometheus and Grafana]
-```
+## Verification status
 
-## Repository structure
+| Capability | Current evidence | Still to verify |
+|---|---|---|
+| Application | Unit tests and Kind integration passed | Behaviour under realistic load |
+| Helm deployment | Two replicas and endpoint assertions passed in Kind | EKS scheduling and networking |
+| Terraform | CI validation passed during development | Reviewed AWS plan and successful apply |
+| ECR publishing | Manual OIDC workflow and IAM configuration exist | Live authentication and image push |
+| Argo CD | Manifests validated | Live sync, reconciliation and rollback |
+| ALB | Controller identity and Ingress configured | AWS provisioning and healthy targets |
+| Monitoring | Stack, dashboard and alert configuration validated | Live scraping, dashboard and alert delivery |
+| Kyverno | Policies and validation exist | Live admission rejection |
+| HPA / node scaling | Configuration exists | Live metrics, scale-up and scale-down |
+| Budgets | Alert configuration exists | AWS budget creation and notification delivery |
 
-```text
-.
-├── .github/workflows/       GitHub Actions workflows
-├── apps/                    Application source and container files
-├── argocd/                  Argo CD applications
-├── docs/                    Architecture, decisions and runbooks
-├── helm/                    Application Helm charts
-├── kubernetes/              Platform Kubernetes manifests
-├── monitoring/              Prometheus and Grafana configuration
-├── policies/                Security and policy-as-code rules
-└── terraform/
-    ├── bootstrap/           Remote-state resources
-    ├── environments/        Environment-specific root modules
-    └── modules/             Reusable infrastructure modules
-```
+Validation is not proof that infrastructure has been provisioned or that every runtime integration works. See [evidence guide](docs/evidence-guide.md).
 
-## Environments
+## Architecture
 
-The project starts with a `dev` environment. Infrastructure is structured so that staging or production environments can be added later without duplicating reusable modules.
+The AWS target design and the tested Kind environment are documented separately in [architecture](docs/architecture.md).
 
-## Current status
+The ECR workflow publishes an image with a Git commit SHA tag. It does **not** automatically update Argo CD's configured image tag. A reviewed Git change must set the real ECR repository and published SHA before Argo CD can deploy that image.
 
-- [x] Repository created
-- [x] Initial project structure documented
-- [ ] Terraform remote-state bootstrap
-- [ ] VPC networking
-- [ ] Amazon ECR
-- [ ] Amazon EKS and managed node groups
-- [ ] Helm application deployment
-- [ ] GitHub Actions CI/CD
-- [ ] Argo CD GitOps
-- [ ] AWS Load Balancer Controller
-- [ ] Prometheus and Grafana
-- [ ] Security and cost controls
+## Repository map
 
-## Cost safety
+| Path | Purpose |
+|---|---|
+| `.github/workflows/` | Validation, scanning, publishing and Kind integration |
+| `apps/platform-api/` | API source, unit tests and Dockerfile |
+| `helm/platform-api/` | Application Helm chart and development overrides |
+| `argocd/` | GitOps application definitions |
+| `terraform/bootstrap/` | Remote-state bootstrap configuration |
+| `terraform/environments/dev/` | Development infrastructure root module |
+| `terraform/modules/` | Reusable AWS infrastructure and identity modules |
+| `monitoring/` | Monitoring values, dashboard and alert manifests |
+| `policies/` | Kubernetes admission policies |
+| `scripts/` | Preflight and integration helpers |
+| `docs/` | Architecture, operational guidance and evidence |
 
-Validation stages do not create AWS resources. Any live deployment step will be clearly marked because EKS, NAT gateways, load balancers and worker nodes can incur charges.
+## Reproduce the test without AWS
+
+1. Open the repository's Actions tab.
+2. Select **Kubernetes integration (no AWS)**.
+3. Choose **Run workflow**, select `main`, and run it.
+4. Review **Deploy and test**, **Diagnostics** and **Delete temporary cluster**.
+
+The workflow only runs manually and skips private repositories. It uses a standard hosted Ubuntu runner, no AWS credentials, no cache and no uploaded artifacts. Consult your account's billing settings before changing visibility or runner type.
+
+The test disables Ingress, autoscaling, ServiceMonitor, NetworkPolicy and topology spread through test-only overrides. It does not install the complete platform. See [integration details](docs/kubernetes-integration.md).
+
+## Application endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `/` | Application name, status and version |
+| `/health` | Liveness response |
+| `/ready` | Readiness response |
+| `/metrics` | Request count and uptime metrics |
+
+## Live AWS deployment
+
+Live deployment remains a separate stage. Follow the [deployment runbook](docs/deployment-runbook.md) and [cost and teardown runbook](docs/cost-and-teardown-runbook.md). Review the Terraform plan, current service pricing, account eligibility, credentials and placeholders before creating resources.
+
+EKS, worker nodes, NAT gateways, ALBs, storage and data transfer may incur charges. Budget alerts do not cap or stop spending. Do not run the publishing workflow before the AWS identity and ECR repository exist.
+
+## Operations and portfolio
+
+- [Rollback](docs/rollback-runbook.md)
+- [Incident response](docs/incident-response-runbook.md)
+- [Recovery](docs/recovery-runbook.md)
+- [Evidence and screenshots](docs/evidence-guide.md)
+- [Project explanation and interview practice](docs/project-explanation.md)
+- [Remaining work](docs/roadmap.md)
 
 ## Licence
 
-This project is licensed under the MIT License. See `LICENSE`.
+MIT. See [LICENSE](LICENSE).

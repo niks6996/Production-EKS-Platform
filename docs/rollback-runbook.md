@@ -1,19 +1,22 @@
-# Rollback runbook
+# Remaining work
 
-## Application rollback
+## Completed portfolio milestone
 
-1. Identify the last healthy immutable ECR image tag.
-2. Revert the Git commit that changed the Argo CD image tag.
-3. Confirm Argo CD synchronises the earlier desired state.
-4. Verify rollout status, health probes, error rate and ALB target health.
+Repository configuration and validation cover infrastructure, application packaging, GitOps, monitoring, scanning, policies and operations. The manual application integration workflow passed on Kind. Screenshots were collected by the project owner. This is the current completion boundary.
 
-Do not retag an existing ECR image. Every deployed version remains traceable to a Git commit.
+## Before live AWS deployment
 
-## Infrastructure rollback
+- Review the actual current AWS plan, service availability/pricing and account eligibility.
+- Recheck Kubernetes support status and controller/chart compatibility for the deployment date.
+- Review action references and replace mutable branches with reviewed commit pins.
+- Replace account, identity, trusted-network, notification and image placeholders appropriately.
+- Review OIDC trust, Pod Identity associations/agent, access entries, NAT routes and state protection.
+- Inspect the Terraform plan and agree a deployment window and teardown procedure.
 
-1. Stop further applies and preserve the failed plan and logs.
-2. Revert the infrastructure commit through a pull request.
-3. Run a new Terraform plan and review every proposed deletion.
-4. Apply only after confirming state locking and the exact affected resources.
+## Live verification still pending
 
-Never manually delete a Terraform-managed resource unless state recovery has been planned.
+Provisioning; ECR authentication/push; EKS node readiness; Argo CD bootstrap/sync; controller identity; ALB targets; application traffic; monitoring/alerts; Kyverno admission tests; HPA/node scaling; rollback/recovery drills; final teardown and residual-resource inspection.
+
+## Portfolio maintenance
+
+Add sanitised evidence and actual run URLs, keep claims aligned with results, practise the project explanation and update this status only after obtaining new evidence. A future production design would also need stronger availability, TLS, durable monitoring/logging, secrets lifecycle management and measured recovery objectives.
