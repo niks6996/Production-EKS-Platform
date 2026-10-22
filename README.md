@@ -88,6 +88,18 @@ EKS, worker nodes, NAT gateways, ALBs, storage and data transfer may incur charg
 - [Project explanation and interview practice](docs/project-explanation.md)
 - [Remaining work](docs/roadmap.md)
 
+## Kubernetes integration evidence
+
+The application passed integration testing on a temporary Kind
+cluster in GitHub Actions. Live AWS EKS deployment remains pending.
+
+- [Successful workflow run](docs/evidence/kind-run-overview.png)
+- [Endpoint test results](docs/evidence/03-kind-endpoint-tests.png)
+- [Kubernetes resources](docs/evidence/04-kind-resources.png)
+- [Cluster cleanup](docs/evidence/05-kind-cleanup.png)
+
+[View all screenshots](docs/evidence/)
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
