@@ -23,6 +23,10 @@ spec:
     - namespace: kube-system
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
+    - group: networking.k8s.io
+      kind: IngressClass
+    - group: elbv2.k8s.aws
+      kind: IngressClassParams
     - group: apiregistration.k8s.io
       kind: APIService
     - group: ""
