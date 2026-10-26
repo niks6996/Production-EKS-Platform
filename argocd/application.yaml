@@ -18,6 +18,8 @@ spec:
       valueFiles:
         - values-dev.yaml
       parameters:
+        - name: serviceMonitor.enabled
+          value: "true"
         - name: image.repository
           value: 097881405585.dkr.ecr.eu-west-2.amazonaws.com/production-eks-platform-dev-app
         - name: image.tag
