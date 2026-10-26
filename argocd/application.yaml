@@ -23,7 +23,7 @@ spec:
         - name: image.tag
           value: "d6435c07b688fc048c707efda69ecf97a1fe3312"
         - name: ingress.enabled
-          value: "false"
+          value: "true"
         - name: autoscaling.enabled
           value: "true"
   destination:
