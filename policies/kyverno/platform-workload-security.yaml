@@ -10,6 +10,7 @@ spec:
   validationFailureAction: Enforce
   rules:
     - name: require-non-root-pods
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -26,6 +27,7 @@ spec:
               runAsNonRoot: true
 
     - name: require-restricted-containers
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -48,6 +50,7 @@ spec:
                       - ALL
 
     - name: require-resource-controls
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -70,6 +73,7 @@ spec:
                     memory: "?*"
 
     - name: require-image-tag
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -86,6 +90,7 @@ spec:
               - image: "*:*"
 
     - name: disallow-latest-image-tag
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
