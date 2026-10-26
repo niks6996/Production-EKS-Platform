@@ -23,3 +23,6 @@ autoscaling:
   minReplicas: 2
   maxReplicas: 4
   targetCPUUtilizationPercentage: 70
+
+podAnnotations:
+  rollout-test: "gitops-v2"
