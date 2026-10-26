@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: kyverno
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-2"
   labels:
     app.kubernetes.io/part-of: production-eks-platform
   finalizers:
@@ -14,20 +12,22 @@ spec:
   source:
     repoURL: https://kyverno.github.io/kyverno
     chart: kyverno
-    targetRevision: 3.5.2
+    targetRevision: "3.9.2"
     helm:
       releaseName: kyverno
       valuesObject:
         admissionController:
           replicas: 2
-          resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+          container:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 500m
+                memory: 768Mi
         backgroundController:
+          replicas: 1
           resources:
             requests:
               cpu: 50m
@@ -36,6 +36,7 @@ spec:
               cpu: 250m
               memory: 256Mi
         cleanupController:
+          replicas: 1
           resources:
             requests:
               cpu: 50m
@@ -44,6 +45,7 @@ spec:
               cpu: 250m
               memory: 256Mi
         reportsController:
+          replicas: 1
           resources:
             requests:
               cpu: 50m
