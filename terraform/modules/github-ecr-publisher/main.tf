@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "assume_role" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:environment:development"]
+      values   = ["repo:niks6996@111993397/Production-EKS-Platform@1341050372:environment:development"]
     }
   }
 }
