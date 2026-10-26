@@ -19,9 +19,13 @@ spec:
         - values-dev.yaml
       parameters:
         - name: image.repository
-          value: 123456789012.dkr.ecr.eu-west-2.amazonaws.com/production-eks-platform-dev-app
+          value: 097881405585.dkr.ecr.eu-west-2.amazonaws.com/production-eks-platform-dev-app
         - name: image.tag
-          value: "0.1.0"
+          value: "d6435c07b688fc048c707efda69ecf97a1fe3312"
+        - name: ingress.enabled
+          value: "false"
+        - name: autoscaling.enabled
+          value: "false"
   destination:
     server: https://kubernetes.default.svc
     namespace: platform
