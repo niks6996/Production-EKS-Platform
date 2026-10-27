@@ -1,41 +1,52 @@
 # Production-Style AWS EKS Platform
 
-A portfolio platform combining modular Terraform, a containerised Python API, Helm, GitHub Actions, Argo CD, security controls and observability configuration.
+A hands-on portfolio project combining modular Terraform, AWS EKS, a
+containerised Python API, Helm, GitHub Actions, Argo CD, Kubernetes security
+policies and observability.
 
-**Status:** repository validation completed during development and application integration passed on a temporary Kind cluster in GitHub Actions. Live AWS EKS deployment is pending. This project has not served production customer traffic.
+**Status:** The development platform was deployed and tested on AWS EKS.
+The environment was destroyed after testing to control costs. This project
+has not served production customer traffic.
 
 ## What this project demonstrates
 
-- Reusable infrastructure modules for VPC, ECR, EKS, workload identity and budget alerts.
-- A non-root application container with health, readiness and Prometheus metrics endpoints.
-- A Helm chart with resource requests/limits, probes and optional platform integrations.
-- CI checks for infrastructure, application, Helm, GitOps, monitoring, policies and runbooks.
-- A manual runtime test that builds the image, loads it into Kind, deploys two replicas, checks endpoints and removes the cluster.
-- Prepared GitOps configuration for monitoring, policy enforcement, ingress and scaling.
-- Operational deployment, rollback, recovery and teardown procedures.
+- Modular Terraform configuration for AWS networking, EKS, ECR and workload
+  identities.
+- GitHub Actions image publishing to ECR using AWS OIDC authentication.
+- A non-root application container with health, readiness and Prometheus
+  metrics endpoints.
+- Helm packaging and Argo CD deployment with automated synchronisation.
+- Public application access through an AWS Application Load Balancer.
+- Prometheus and Grafana monitoring, with alert rules and Alertmanager.
+- Kubernetes admission controls using Kyverno.
+- Application and node autoscaling tests.
+- GitOps drift correction and configuration rollback.
+- Deployment and teardown procedures for a temporary AWS environment.
 
 ## Verification status
 
-| Capability | Current evidence | Still to verify |
+| Capability | Result | Scope or limitation |
 |---|---|---|
-| Application | Unit tests and Kind integration passed | Behaviour under realistic load |
-| Helm deployment | Two replicas and endpoint assertions passed in Kind | EKS scheduling and networking |
-| Terraform | CI validation passed during development | Reviewed AWS plan and successful apply |
-| ECR publishing | Manual OIDC workflow and IAM configuration exist | Live authentication and image push |
-| Argo CD | Manifests validated | Live sync, reconciliation and rollback |
-| ALB | Controller identity and Ingress configured | AWS provisioning and healthy targets |
-| Monitoring | Stack, dashboard and alert configuration validated | Live scraping, dashboard and alert delivery |
-| Kyverno | Policies and validation exist | Live admission rejection |
-| HPA / node scaling | Configuration exists | Live metrics, scale-up and scale-down |
-| Budgets | Alert configuration exists | AWS budget creation and notification delivery |
-
-Validation is not proof that infrastructure has been provisioned or that every runtime integration works. See [evidence guide](docs/evidence-guide.md).
+| Terraform and EKS | Applied the development infrastructure and verified Ready worker nodes | The environment was destroyed after testing |
+| ECR publishing | Published the application image through a GitHub Actions workflow using AWS OIDC | The image was deleted during teardown |
+| Argo CD | Deployed the application and tested automatic correction of a manual change | The deployment is a portfolio exercise |
+| ALB and API | Reached `/health` and `/ready` through the public ALB with HTTP 200 responses | The ALB was removed during teardown |
+| Monitoring | Prometheus scraped the API and Grafana displayed application metrics | Monitoring storage was temporary |
+| Alerting | Application alert rules were loaded; a synthetic alert fired and was received by Alertmanager | External email or Slack delivery was not tested |
+| Kyverno | A noncompliant test pod was denied during server-side dry run | The policy test targeted the `platform` namespace |
+| HPA | Application replicas increased from 2 to 4 during a bounded load test | The result is specific to the test environment |
+| Cluster Autoscaler | A second worker node became Ready during the scaling test | Exact scale-down timing was not recorded |
+| GitOps rollback | Tested a configuration change followed by a Git revert | This was not an image-version rollback |
+| AWS cleanup | Removed the development environment and checked the main chargeable resources in the deployment region | The Terraform bootstrap state bucket was retained |
 
 ## Architecture
 
-The AWS target design and the tested Kind environment are documented separately in [architecture](docs/architecture.md).
+The AWS target design and the tested Kind environment are documented in
+[architecture](docs/architecture.md).
 
-The ECR workflow publishes an image with a Git commit SHA tag. It does **not** automatically update Argo CD's configured image tag. A reviewed Git change must set the real ECR repository and published SHA before Argo CD can deploy that image.
+The GitHub Actions publishing workflow tags the image with a Git commit SHA.
+It does **not** automatically update the Argo CD image reference. A reviewed
+change must set the ECR repository and published tag before deployment.
 
 ## Repository map
 
@@ -44,7 +55,7 @@ The ECR workflow publishes an image with a Git commit SHA tag. It does **not** a
 | `.github/workflows/` | Validation, scanning, publishing and Kind integration |
 | `apps/platform-api/` | API source, unit tests and Dockerfile |
 | `helm/platform-api/` | Application Helm chart and development overrides |
-| `argocd/` | GitOps application definitions |
+| `argocd/` | GitOps project and application definitions |
 | `terraform/bootstrap/` | Remote-state bootstrap configuration |
 | `terraform/environments/dev/` | Development infrastructure root module |
 | `terraform/modules/` | Reusable AWS infrastructure and identity modules |
@@ -52,17 +63,6 @@ The ECR workflow publishes an image with a Git commit SHA tag. It does **not** a
 | `policies/` | Kubernetes admission policies |
 | `scripts/` | Preflight and integration helpers |
 | `docs/` | Architecture, operational guidance and evidence |
-
-## Reproduce the test without AWS
-
-1. Open the repository's Actions tab.
-2. Select **Kubernetes integration (no AWS)**.
-3. Choose **Run workflow**, select `main`, and run it.
-4. Review **Deploy and test**, **Diagnostics** and **Delete temporary cluster**.
-
-The workflow only runs manually and skips private repositories. It uses a standard hosted Ubuntu runner, no AWS credentials, no cache and no uploaded artifacts. Consult your account's billing settings before changing visibility or runner type.
-
-The test disables Ingress, autoscaling, ServiceMonitor, NetworkPolicy and topology spread through test-only overrides. It does not install the complete platform. See [integration details](docs/kubernetes-integration.md).
 
 ## Application endpoints
 
@@ -73,32 +73,50 @@ The test disables Ingress, autoscaling, ServiceMonitor, NetworkPolicy and topolo
 | `/ready` | Readiness response |
 | `/metrics` | Request count and uptime metrics |
 
-## Live AWS deployment
+## Reproduce the test without AWS
 
-Live deployment remains a separate stage. Follow the [deployment runbook](docs/deployment-runbook.md) and [cost and teardown runbook](docs/cost-and-teardown-runbook.md). Review the Terraform plan, current service pricing, account eligibility, credentials and placeholders before creating resources.
+1. Open the repository's **Actions** tab.
+2. Select **Kubernetes integration (no AWS)**.
+3. Choose **Run workflow**, select `main` and run it.
+4. Review **Deploy and test**, **Diagnostics** and **Delete temporary cluster**.
 
-EKS, worker nodes, NAT gateways, ALBs, storage and data transfer may incur charges. Budget alerts do not cap or stop spending. Do not run the publishing workflow before the AWS identity and ECR repository exist.
+The manual workflow runs an application integration test on a temporary
+Kind cluster. It does not install the complete AWS platform. See the
+[integration details](docs/kubernetes-integration.md).
 
-## Operations and portfolio
+## Redeploy on AWS
 
-- [Rollback](docs/rollback-runbook.md)
-- [Incident response](docs/incident-response-runbook.md)
-- [Recovery](docs/recovery-runbook.md)
+Follow the [deployment runbook](docs/deployment-runbook.md) and
+[cost and teardown runbook](docs/cost-and-teardown-runbook.md).
+
+The ECR image and VPC from the live test were deleted during cleanup.
+A new deployment requires a newly published image and updated
+environment-specific Argo CD values. Review the Terraform plan, current
+pricing, credentials and configuration before creating resources.
+
+EKS, worker nodes, NAT gateways, ALBs, storage and data transfer may incur
+charges. Budget alerts do not cap or stop spending.
+
+## Evidence and operations
+
 - [Evidence and screenshots](docs/evidence-guide.md)
+- [Rollback runbook](docs/rollback-runbook.md)
+- [Incident response runbook](docs/incident-response-runbook.md)
+- [Recovery runbook](docs/recovery-runbook.md)
 - [Project explanation and interview practice](docs/project-explanation.md)
 - [Remaining work](docs/roadmap.md)
+- [Kind integration screenshots](docs/evidence/)
 
-## Kubernetes integration evidence
+Selected live AWS screenshots are available in the evidence directory.
+The evidence guide explains what each screenshot shows and its limitations.
 
-The application passed integration testing on a temporary Kind
-cluster in GitHub Actions. Live AWS EKS deployment remains pending.
+## Limitations
 
-- [Successful workflow run](docs/evidence/kind-run-overview.png)
-- [Endpoint test results](docs/evidence/03-kind-endpoint-tests.png)
-- [Kubernetes resources](docs/evidence/04-kind-resources.png)
-- [Cluster cleanup](docs/evidence/05-kind-cleanup.png)
-
-[View all screenshots](docs/evidence/)
+This is a temporary development environment for learning and portfolio
+demonstration. It is not a production service. A production implementation
+would need further work, including stronger availability, TLS, durable
+monitoring and logging, a managed secrets lifecycle and measured recovery
+objectives.
 
 ## Licence
 
