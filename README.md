@@ -41,12 +41,9 @@ has not served production customer traffic.
 
 ## Architecture
 
-The AWS target design and the tested Kind environment are documented in
-[architecture](docs/architecture.md).
+The tested AWS development platform and the separate Kind integration environment are documented in [architecture](docs/architecture.md).
 
-The GitHub Actions publishing workflow tags the image with a Git commit SHA.
-It does **not** automatically update the Argo CD image reference. A reviewed
-change must set the ECR repository and published tag before deployment.
+The GitHub Actions publishing workflow tags the image with a Git commit SHA. It does **not** automatically update the Argo CD image reference. A reviewed change must set the ECR repository and published tag before deployment.
 
 ## Repository map
 
